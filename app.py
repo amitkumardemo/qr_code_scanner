@@ -2,7 +2,6 @@ import streamlit as st
 import cv2
 import numpy as np
 from PIL import Image
-import io
 
 # Set page configuration
 st.set_page_config(page_title="QR Code Scanner", layout="wide")
@@ -70,17 +69,21 @@ if choice == "Home":
     uploaded_file = st.file_uploader("Upload a QR Code image:", type=["png", "jpg", "jpeg"])
 
     if uploaded_file is not None:
-        # Show file name
-        st.write(f"Uploaded File: {uploaded_file.name}")
-
-        # Convert the image to OpenCV format
+        # Load image using PIL
         image = Image.open(uploaded_file)
-        image_np = np.array(image.convert('RGB'))
+
+        # Convert the image to a numpy array
+        image_np = np.array(image)
+
+        # Convert the image from RGB (PIL) to BGR (OpenCV)
         image_cv = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
 
         # QR code detection
         qr_detector = cv2.QRCodeDetector()
         data, points, _ = qr_detector(image_cv)
+
+        # Show the uploaded image
+        st.image(uploaded_file, caption="Uploaded QR Code Image", use_column_width=True)
 
         # If QR code is detected
         if data:
