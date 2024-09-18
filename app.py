@@ -1,6 +1,7 @@
 import streamlit as st
+import cv2
+import numpy as np
 from PIL import Image
-from pyzbar.pyzbar import decode
 import io
 
 # Set page configuration
@@ -53,19 +54,6 @@ st.markdown("""
     .footer a:hover {
         text-decoration: underline;
     }
-    .icon-btn {
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        text-align: center;
-        text-decoration: none;
-        display: inline-block;
-        font-size: 16px;
-        margin: 4px 2px;
-        cursor: pointer;
-        border-radius: 5px;
-    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -82,19 +70,23 @@ if choice == "Home":
     uploaded_file = st.file_uploader("Upload a QR Code image:", type=["png", "jpg", "jpeg"])
 
     if uploaded_file is not None:
-        # Show the file name
-        st.write(f"Uploaded File Name: **{uploaded_file.name}**")
-
         # Load image using PIL
         image = Image.open(uploaded_file)
+        st.image(image, caption="Uploaded QR Code Image", use_column_width=True)
 
-        # Decode QR code
-        decoded_objects = decode(image)
-        if decoded_objects:
-            data = decoded_objects[0].data.decode('utf-8')
+        # Convert the image to OpenCV format
+        image_np = np.array(image.convert('RGB'))  # Convert image to RGB
+        image_cv = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+
+        # QR code detection
+        qr_detector = cv2.QRCodeDetector()
+        data, points, _ = qr_detector(image_cv)
+
+        # If QR code is detected
+        if data:
             st.success(f"QR Code Data: {data}")
 
-            # Download button to download the extracted data
+            # Download button
             st.download_button(
                 label="📥 Download Text",
                 data=data,
@@ -104,17 +96,17 @@ if choice == "Home":
             )
 
             # Copy button using JavaScript
-            components.html(f"""
-            <script>
-            function copyToClipboard() {{
-                const text = `{data.replace("`", "\\`")}`;
-                navigator.clipboard.writeText(text).then(() => {{
-                    alert('Text copied to clipboard!');
-                }});
-            }}
-            </script>
-            <button class="icon-btn" onclick="copyToClipboard()">📋 Copy Text</button>
-            """, height=50, scrolling=False)
+            st.components.v1.html(f"""
+                <script>
+                function copyToClipboard() {{
+                    const text = `{data.replace("`", "\\`")}`;
+                    navigator.clipboard.writeText(text).then(() => {{
+                        alert('Text copied to clipboard!');
+                    }});
+                }}
+                </script>
+                <button class="icon-btn" onclick="copyToClipboard()">📋 Copy Text</button>
+                """, height=50, scrolling=False)
         else:
             st.warning("No data found in the QR code.")
 
@@ -127,11 +119,10 @@ elif choice == "About":
     **Features**:
     - Upload an image containing a QR code.
     - Extract the data encoded in the QR code.
-    - Download or copy the data.
 
     **Technology Stack**:
     - Streamlit (for building the web app)
-    - Pyzbar (for QR code detection and decoding)
+    - OpenCV (for QR code detection and decoding)
     - PIL (for handling images)
     """)
 
