@@ -2,7 +2,6 @@ import streamlit as st
 import numpy as np
 from PIL import Image
 import cv2
-from pyzbar.pyzbar import decode
 
 # Set page configuration
 st.set_page_config(page_title="QR Code Scanner", layout="wide")
@@ -82,11 +81,12 @@ if choice == "Home":
                 # Convert the image from RGB (PIL) to BGR (OpenCV)
                 image_cv = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
 
-                # QR code detection using pyzbar
-                decoded_objects = decode(image_cv)
-                if decoded_objects:
-                    # Assuming there is only one QR code in the image
-                    data = decoded_objects[0].data.decode('utf-8')
+                # QR code detection using OpenCV
+                qr_detector = cv2.QRCodeDetector()
+                retval, decoded_info, points, _ = qr_detector(image_cv)
+
+                if retval:
+                    data = decoded_info[0]
                     st.success(f"QR Code Data: {data}")
 
                     # Show the uploaded image
@@ -133,7 +133,7 @@ elif choice == "About":
 
     **Technology Stack**:
     - Streamlit (for building the web app)
-    - OpenCV and pyzbar (for QR code detection and decoding)
+    - OpenCV (for QR code detection and decoding)
     - PIL (for handling images)
     """)
 
