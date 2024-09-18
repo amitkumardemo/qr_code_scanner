@@ -1,8 +1,7 @@
 import streamlit as st
-import cv2
-import numpy as np
 from PIL import Image
-import streamlit.components.v1 as components
+from pyzbar.pyzbar import decode
+import io
 
 # Set page configuration
 st.set_page_config(page_title="QR Code Scanner", layout="wide")
@@ -18,7 +17,7 @@ st.markdown("""
 <div class="navbar">
   <a href="#Home">Home</a>
   <a href="#About">About</a>
-  <a href="https://techiehelpt.netlify.app/">Back To Website</a>
+  <a href="#BackToWebsite">Back To Website</a>
 </div>
 <style>
     .navbar {
@@ -86,48 +85,38 @@ if choice == "Home":
         # Show the file name
         st.write(f"Uploaded File Name: **{uploaded_file.name}**")
 
-        # Load image using PIL but do not display it
+        # Load image using PIL
         image = Image.open(uploaded_file)
 
-        # Convert the image to OpenCV format
-        image_np = np.array(image.convert('RGB'))  # Convert image to RGB
-        image_cv = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+        # Decode QR code
+        decoded_objects = decode(image)
+        if decoded_objects:
+            data = decoded_objects[0].data.decode('utf-8')
+            st.success(f"QR Code Data: {data}")
 
-        # QR code detection
-        qr_detector = cv2.QRCodeDetector()
-        data, points, _ = qr_detector.detectAndDecode(image_cv)
+            # Download button to download the extracted data
+            st.download_button(
+                label="📥 Download Text",
+                data=data,
+                file_name="extracted_text.txt",
+                mime="text/plain",
+                key="download_button"
+            )
 
-        # If QR code is detected
-        if points is not None:
-            if data:
-                st.success(f"QR Code Data: {data}")
-
-                # Download button to download the extracted data
-                st.download_button(
-                    label="📥 Download Text",
-                    data=data,
-                    file_name="extracted_text.txt",
-                    mime="text/plain",
-                    key="download_button"
-                )
-
-                # Copy button using JavaScript
-                components.html(f"""
-                <script>
-                function copyToClipboard() {{
-                    const text = `{data.replace("`", "\\`")}`;
-                    navigator.clipboard.writeText(text).then(() => {{
-                        alert('Text copied to clipboard!');
-                    }});
-                }}
-                </script>
-                <button class="icon-btn" onclick="copyToClipboard()">📋 Copy Text</button>
-                """, height=50, scrolling=False)
-
-            else:
-                st.warning("No data found in the QR code.")
+            # Copy button using JavaScript
+            components.html(f"""
+            <script>
+            function copyToClipboard() {{
+                const text = `{data.replace("`", "\\`")}`;
+                navigator.clipboard.writeText(text).then(() => {{
+                    alert('Text copied to clipboard!');
+                }});
+            }}
+            </script>
+            <button class="icon-btn" onclick="copyToClipboard()">📋 Copy Text</button>
+            """, height=50, scrolling=False)
         else:
-            st.error("No QR code detected in the image.")
+            st.warning("No data found in the QR code.")
 
 elif choice == "About":
     # About Page
@@ -142,7 +131,7 @@ elif choice == "About":
 
     **Technology Stack**:
     - Streamlit (for building the web app)
-    - OpenCV (for QR code detection and decoding)
+    - Pyzbar (for QR code detection and decoding)
     - PIL (for handling images)
     """)
 
