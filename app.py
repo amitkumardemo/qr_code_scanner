@@ -70,12 +70,12 @@ if choice == "Home":
     uploaded_file = st.file_uploader("Upload a QR Code image:", type=["png", "jpg", "jpeg"])
 
     if uploaded_file is not None:
-        # Load image using PIL
-        image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded QR Code Image", use_column_width=True)
+        # Show file name
+        st.write(f"Uploaded File: {uploaded_file.name}")
 
         # Convert the image to OpenCV format
-        image_np = np.array(image.convert('RGB'))  # Convert image to RGB
+        image = Image.open(uploaded_file)
+        image_np = np.array(image.convert('RGB'))
         image_cv = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
 
         # QR code detection
