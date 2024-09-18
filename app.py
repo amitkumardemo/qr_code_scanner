@@ -73,16 +73,24 @@ if choice == "Home":
             # Load image using PIL
             image = Image.open(uploaded_file)
 
+            # Display image info for debugging
+            st.write("Image format:", image.format)
+            st.write("Image mode:", image.mode)
+            st.write("Image size:", image.size)
+
             # Convert the image to a numpy array
             image_np = np.array(image)
 
-            # Ensure the image is in RGB format
+            # Check if the image has an alpha channel and handle it
             if image_np.ndim == 3 and image_np.shape[2] in [3, 4]:
                 # Convert the image from RGB (PIL) to BGR (OpenCV)
                 if image_np.shape[2] == 4:  # RGBA
                     image_np = cv2.cvtColor(image_np, cv2.COLOR_RGBA2BGR)
                 else:  # RGB
                     image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+
+                # Display converted image info for debugging
+                st.write("Converted image shape:", image_np.shape)
 
                 # QR code detection using OpenCV
                 qr_detector = cv2.QRCodeDetector()
@@ -119,8 +127,7 @@ if choice == "Home":
                 else:
                     st.warning("No data found in the QR code.")
             else:
-                st.error("Uploaded file is not a valid image or is not in RGB format.")
-
+                st.error("Uploaded file is not in RGB format or is not a valid image.")
         except Exception as e:
             st.error(f"An error occurred: {e}")
 
