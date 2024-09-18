@@ -78,56 +78,53 @@ if choice == "Home":
             st.write("Image mode:", image.mode)
             st.write("Image size:", image.size)
 
+            # Convert the image to RGB if not already in RGB format
+            if image.mode != 'RGB':
+                image = image.convert('RGB')
+
             # Convert the image to a numpy array
             image_np = np.array(image)
 
-            # Check if the image has an alpha channel and handle it
-            if image_np.ndim == 3 and image_np.shape[2] in [3, 4]:
-                # Convert the image from RGB (PIL) to BGR (OpenCV)
-                if image_np.shape[2] == 4:  # RGBA
-                    image_np = cv2.cvtColor(image_np, cv2.COLOR_RGBA2BGR)
-                else:  # RGB
-                    image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+            # Convert the image from RGB (PIL) to BGR (OpenCV)
+            image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
 
-                # Display converted image info for debugging
-                st.write("Converted image shape:", image_np.shape)
+            # Display converted image info for debugging
+            st.write("Converted image shape:", image_np.shape)
 
-                # QR code detection using OpenCV
-                qr_detector = cv2.QRCodeDetector()
-                retval, decoded_info, points, _ = qr_detector(image_np)
+            # QR code detection using OpenCV
+            qr_detector = cv2.QRCodeDetector()
+            retval, decoded_info, points, _ = qr_detector(image_np)
 
-                if retval:
-                    data = decoded_info[0]
-                    st.success(f"QR Code Data: {data}")
+            if retval:
+                data = decoded_info[0]
+                st.success(f"QR Code Data: {data}")
 
-                    # Show the uploaded image
-                    st.image(image, caption="Uploaded QR Code Image", use_column_width=True)
+                # Show the uploaded image
+                st.image(image, caption="Uploaded QR Code Image", use_column_width=True)
 
-                    # Download button
-                    st.download_button(
-                        label="📥 Download Text",
-                        data=data,
-                        file_name="extracted_text.txt",
-                        mime="text/plain",
-                        key="download_button"
-                    )
+                # Download button
+                st.download_button(
+                    label="📥 Download Text",
+                    data=data,
+                    file_name="extracted_text.txt",
+                    mime="text/plain",
+                    key="download_button"
+                )
 
-                    # Copy button using JavaScript
-                    st.components.v1.html(f"""
-                        <script>
-                        function copyToClipboard() {{
-                            const text = `{data.replace("`", "\\`")}`;
-                            navigator.clipboard.writeText(text).then(() => {{
-                                alert('Text copied to clipboard!');
-                            }});
-                        }}
-                        </script>
-                        <button class="icon-btn" onclick="copyToClipboard()">📋 Copy Text</button>
-                        """, height=50, scrolling=False)
-                else:
-                    st.warning("No data found in the QR code.")
+                # Copy button using JavaScript
+                st.components.v1.html(f"""
+                    <script>
+                    function copyToClipboard() {{
+                        const text = `{data.replace("`", "\\`")}`;
+                        navigator.clipboard.writeText(text).then(() => {{
+                            alert('Text copied to clipboard!');
+                        }});
+                    }}
+                    </script>
+                    <button class="icon-btn" onclick="copyToClipboard()">📋 Copy Text</button>
+                    """, height=50, scrolling=False)
             else:
-                st.error("Uploaded file is not in RGB format or is not a valid image.")
+                st.warning("No data found in the QR code.")
         except Exception as e:
             st.error(f"An error occurred: {e}")
 
