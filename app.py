@@ -1,7 +1,8 @@
 import streamlit as st
+import cv2
 import numpy as np
 from PIL import Image
-import cv2
+import streamlit.components.v1 as components
 
 # Set page configuration
 st.set_page_config(page_title="QR Code Scanner", layout="wide")
@@ -53,6 +54,19 @@ st.markdown("""
     .footer a:hover {
         text-decoration: underline;
     }
+    .icon-btn {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 5px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -69,42 +83,26 @@ if choice == "Home":
     uploaded_file = st.file_uploader("Upload a QR Code image:", type=["png", "jpg", "jpeg"])
 
     if uploaded_file is not None:
-        try:
-            # Load image using PIL
-            image = Image.open(uploaded_file)
+        # Show the file name
+        st.write(f"Uploaded File Name: **{uploaded_file.name}**")
 
-            # Display image info for debugging
-            st.write("Image format:", image.format)
-            st.write("Image mode:", image.mode)
-            st.write("Image size:", image.size)
+        # Load image using PIL but do not display it
+        image = Image.open(uploaded_file)
 
-            # Convert the image to RGB if not already in RGB format
-            if image.mode == '1':  # Binary image mode
-                image = image.convert('L')  # Convert to grayscale
-            elif image.mode != 'RGB':
-                image = image.convert('RGB')
+        # Convert the image to OpenCV format
+        image_np = np.array(image.convert('RGB'))  # Convert image to RGB
+        image_cv = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
 
-            # Convert the image to a numpy array
-            image_np = np.array(image)
+        # QR code detection
+        qr_detector = cv2.QRCodeDetector()
+        data, points, _ = qr_detector.detectAndDecode(image_cv)
 
-            # Convert the image from RGB (PIL) to BGR (OpenCV)
-            image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
-
-            # Display converted image info for debugging
-            st.write("Converted image shape:", image_np.shape)
-
-            # QR code detection using OpenCV
-            qr_detector = cv2.QRCodeDetector()
-            retval, decoded_info, points, _ = qr_detector.detectAndDecode(image_np)
-
-            if retval:
-                data = decoded_info
+        # If QR code is detected
+        if points is not None:
+            if data:
                 st.success(f"QR Code Data: {data}")
 
-                # Show the uploaded image
-                st.image(image, caption="Uploaded QR Code Image", use_column_width=True)
-
-                # Download button
+                # Download button to download the extracted data
                 st.download_button(
                     label="📥 Download Text",
                     data=data,
@@ -114,21 +112,22 @@ if choice == "Home":
                 )
 
                 # Copy button using JavaScript
-                st.components.v1.html(f"""
-                    <script>
-                    function copyToClipboard() {{
-                        const text = `{data.replace("`", "\\`")}`;
-                        navigator.clipboard.writeText(text).then(() => {{
-                            alert('Text copied to clipboard!');
-                        }});
-                    }}
-                    </script>
-                    <button class="icon-btn" onclick="copyToClipboard()">📋 Copy Text</button>
-                    """, height=50, scrolling=False)
+                components.html(f"""
+                <script>
+                function copyToClipboard() {{
+                    const text = `{data.replace("`", "\\`")}`;
+                    navigator.clipboard.writeText(text).then(() => {{
+                        alert('Text copied to clipboard!');
+                    }});
+                }}
+                </script>
+                <button class="icon-btn" onclick="copyToClipboard()">📋 Copy Text</button>
+                """, height=50, scrolling=False)
+
             else:
                 st.warning("No data found in the QR code.")
-        except Exception as e:
-            st.error(f"An error occurred: {str(e)}")
+        else:
+            st.error("No QR code detected in the image.")
 
 elif choice == "About":
     # About Page
@@ -139,6 +138,7 @@ elif choice == "About":
     **Features**:
     - Upload an image containing a QR code.
     - Extract the data encoded in the QR code.
+    - Download or copy the data.
 
     **Technology Stack**:
     - Streamlit (for building the web app)
