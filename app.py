@@ -1,7 +1,8 @@
 import streamlit as st
-import cv2
 import numpy as np
 from PIL import Image
+import cv2
+from pyzbar.pyzbar import decode
 
 # Set page configuration
 st.set_page_config(page_title="QR Code Scanner", layout="wide")
@@ -69,49 +70,56 @@ if choice == "Home":
     uploaded_file = st.file_uploader("Upload a QR Code image:", type=["png", "jpg", "jpeg"])
 
     if uploaded_file is not None:
-        # Load image using PIL
-        image = Image.open(uploaded_file)
+        try:
+            # Load image using PIL
+            image = Image.open(uploaded_file)
 
-        # Convert the image to a numpy array
-        image_np = np.array(image)
+            # Convert the image to a numpy array
+            image_np = np.array(image)
 
-        # Convert the image from RGB (PIL) to BGR (OpenCV)
-        image_cv = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+            # Ensure the image is in RGB format
+            if len(image_np.shape) == 3 and image_np.shape[2] == 3:
+                # Convert the image from RGB (PIL) to BGR (OpenCV)
+                image_cv = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
 
-        # QR code detection
-        qr_detector = cv2.QRCodeDetector()
-        data, points, _ = qr_detector(image_cv)
+                # QR code detection using pyzbar
+                decoded_objects = decode(image_cv)
+                if decoded_objects:
+                    # Assuming there is only one QR code in the image
+                    data = decoded_objects[0].data.decode('utf-8')
+                    st.success(f"QR Code Data: {data}")
 
-        # Show the uploaded image
-        st.image(uploaded_file, caption="Uploaded QR Code Image", use_column_width=True)
+                    # Show the uploaded image
+                    st.image(uploaded_file, caption="Uploaded QR Code Image", use_column_width=True)
 
-        # If QR code is detected
-        if data:
-            st.success(f"QR Code Data: {data}")
+                    # Download button
+                    st.download_button(
+                        label="📥 Download Text",
+                        data=data,
+                        file_name="extracted_text.txt",
+                        mime="text/plain",
+                        key="download_button"
+                    )
 
-            # Download button
-            st.download_button(
-                label="📥 Download Text",
-                data=data,
-                file_name="extracted_text.txt",
-                mime="text/plain",
-                key="download_button"
-            )
+                    # Copy button using JavaScript
+                    st.components.v1.html(f"""
+                        <script>
+                        function copyToClipboard() {{
+                            const text = `{data.replace("`", "\\`")}`;
+                            navigator.clipboard.writeText(text).then(() => {{
+                                alert('Text copied to clipboard!');
+                            }});
+                        }}
+                        </script>
+                        <button class="icon-btn" onclick="copyToClipboard()">📋 Copy Text</button>
+                        """, height=50, scrolling=False)
+                else:
+                    st.warning("No data found in the QR code.")
+            else:
+                st.error("Uploaded file is not a valid image or is not in RGB format.")
 
-            # Copy button using JavaScript
-            st.components.v1.html(f"""
-                <script>
-                function copyToClipboard() {{
-                    const text = `{data.replace("`", "\\`")}`;
-                    navigator.clipboard.writeText(text).then(() => {{
-                        alert('Text copied to clipboard!');
-                    }});
-                }}
-                </script>
-                <button class="icon-btn" onclick="copyToClipboard()">📋 Copy Text</button>
-                """, height=50, scrolling=False)
-        else:
-            st.warning("No data found in the QR code.")
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
 
 elif choice == "About":
     # About Page
@@ -125,7 +133,7 @@ elif choice == "About":
 
     **Technology Stack**:
     - Streamlit (for building the web app)
-    - OpenCV (for QR code detection and decoding)
+    - OpenCV and pyzbar (for QR code detection and decoding)
     - PIL (for handling images)
     """)
 
