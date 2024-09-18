@@ -17,7 +17,7 @@ st.markdown("""
 <div class="navbar">
   <a href="#Home">Home</a>
   <a href="#About">About</a>
-  <a href="https://techiehelpt.netlify.app/">Back To Website</a>
+  <a href="#BackToWebsite">Back To Website</a>
 </div>
 <style>
     .navbar {
@@ -93,10 +93,10 @@ if choice == "Home":
 
             # QR code detection using OpenCV
             qr_detector = cv2.QRCodeDetector()
-            retval, decoded_info, points, _ = qr_detector(image_np)
+            retval, decoded_info, points, _ = qr_detector.detectAndDecode(image_np)
 
             if retval:
-                data = decoded_info[0]
+                data = decoded_info
                 st.success(f"QR Code Data: {data}")
 
                 # Show the uploaded image
@@ -126,7 +126,7 @@ if choice == "Home":
             else:
                 st.warning("No data found in the QR code.")
         except Exception as e:
-            st.error(f"An error occurred: {e}")
+            st.error("An error occurred while processing the image. Please ensure the image is a valid QR code and try again.")
 
 elif choice == "About":
     # About Page
