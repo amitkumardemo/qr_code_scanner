@@ -17,7 +17,7 @@ st.markdown("""
 <div class="navbar">
   <a href="#Home">Home</a>
   <a href="#About">About</a>
-  <a href="#BackToWebsite">Back To Website</a>
+  <a href="https://techiehelpt.netlify.app/">Back To Website</a>
 </div>
 <style>
     .navbar {
@@ -77,20 +77,23 @@ if choice == "Home":
             image_np = np.array(image)
 
             # Ensure the image is in RGB format
-            if len(image_np.shape) == 3 and image_np.shape[2] == 3:
+            if image_np.ndim == 3 and image_np.shape[2] in [3, 4]:
                 # Convert the image from RGB (PIL) to BGR (OpenCV)
-                image_cv = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
+                if image_np.shape[2] == 4:  # RGBA
+                    image_np = cv2.cvtColor(image_np, cv2.COLOR_RGBA2BGR)
+                else:  # RGB
+                    image_np = cv2.cvtColor(image_np, cv2.COLOR_RGB2BGR)
 
                 # QR code detection using OpenCV
                 qr_detector = cv2.QRCodeDetector()
-                retval, decoded_info, points, _ = qr_detector(image_cv)
+                retval, decoded_info, points, _ = qr_detector(image_np)
 
                 if retval:
                     data = decoded_info[0]
                     st.success(f"QR Code Data: {data}")
 
                     # Show the uploaded image
-                    st.image(uploaded_file, caption="Uploaded QR Code Image", use_column_width=True)
+                    st.image(image, caption="Uploaded QR Code Image", use_column_width=True)
 
                     # Download button
                     st.download_button(
