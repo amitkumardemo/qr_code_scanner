@@ -79,7 +79,9 @@ if choice == "Home":
             st.write("Image size:", image.size)
 
             # Convert the image to RGB if not already in RGB format
-            if image.mode != 'RGB':
+            if image.mode == '1':  # Binary image mode
+                image = image.convert('L')  # Convert to grayscale
+            elif image.mode != 'RGB':
                 image = image.convert('RGB')
 
             # Convert the image to a numpy array
@@ -126,7 +128,7 @@ if choice == "Home":
             else:
                 st.warning("No data found in the QR code.")
         except Exception as e:
-            st.error("An error occurred while processing the image. Please ensure the image is a valid QR code and try again.")
+            st.error(f"An error occurred: {str(e)}")
 
 elif choice == "About":
     # About Page
