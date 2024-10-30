@@ -8,7 +8,7 @@ The QR Code Generator is a web application built using Python and Streamlit that
 
 ## Click here to use 
 
-[use me ](https://qrcodegenerator-1.streamlit.app/)
+[Try for free ](https://qrcodegenerator-1.streamlit.app/)
 
 ## Features
 
