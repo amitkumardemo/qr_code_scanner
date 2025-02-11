@@ -4,7 +4,7 @@
 
 The QR Code Generator is a web application built using Python and Streamlit that allows users to create and download QR codes easily. This application enables users to input text or URLs and generate corresponding QR codes, which can be scanned by any QR code reader.
 
-![QR Code Generator Screenshot](https://github.com/amitkumardemo/qr_code_scanner/blob/main/Screenshot%202024-10-30%20130546.png) <!-- Add a link to your screenshot here -->.................................
+![QR Code Generator Screenshot](https://github.com/amitkumardemo/qr_code_scanner/blob/main/Screenshot%202024-10-30%20130546.png) <!-- Add a link to your screenshot here -->................................
 
 ## Click here to use 
 
